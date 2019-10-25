@@ -2,7 +2,8 @@ import pygame
 from pygame.locals import *
 import random
 
-def on_grid_random():  #função para alinhas as frutas com a cobra
+
+def on_grid_random():  #função para alinhar as frutas com a cobra
     x = random.randint(0,590)
     y = random.randint(0,590)
     return (x // 10 * 10 , y // 10 * 10)
@@ -17,6 +18,7 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
+
 # Tela
 pygame.init()
 screen = pygame.display.set_mode((600,600))
@@ -26,11 +28,22 @@ snake = [(200,200),(210,200),(220,200)] # a cobra é representada por uma lista 
 snake_skin = pygame.Surface((10,10)) # pixel da cobra em formato de quadrado
 snake_skin.fill((0,255,0)) # cor da cobra em lime green em rgb
 
+
 fruit_pos = on_grid_random()
 fruit = pygame.Surface((10,10)) # fruta
 fruit.fill((255,0,0))
 
+poison_pos = on_grid_random() # veneno
+poison = pygame.Surface((10,10))
+poison.fill((139,0,139))
+
+wall_pos = on_grid_random()
+wall = pygame.Surface((50,50))
+wall.fill((0,0,139))
+
+
 snake_direction =  LEFT # direção que a cobra começa movimentando
+
 clock = pygame.time.Clock()
 
 font = pygame.font.Font('freesansbold.ttf', 18)
@@ -41,13 +54,10 @@ game_over = False
 
 while not game_over:
 
-    clock.tick(30)  # limitar os fps
+    clock.tick(10)  # limitar os fps
 
     for event in pygame.event.get():
-        if event.type == QUIT: # fechar o jogo
-            pygame.quit()
-            exit()
-
+         
          # configurando as teclas
         if event.type == KEYDOWN:
 
@@ -62,12 +72,24 @@ while not game_over:
 
             if event.key == K_LEFT:
                 snake_direction = LEFT
+            
 
-    if collision(snake[0],fruit_pos): # testar colisão
+    if collision(snake[0],fruit_pos): # testar colisão com a fruta
         fruit_pos = on_grid_random()
-        snake.append((0,0))
+        snake.append((0,0)) # aumenta o tamanho da cobra
         score += 1
+
+    if collision(snake[0],poison_pos): # testar colisao com o veneno
+        poison_pos = on_grid_random()
+        snake.pop() # diminui o tamanho da cobra
+        score -= 1
     
+    if collision(snake[0],wall_pos): # testar colisao com a parede
+        game_over = True
+        
+
+
+
     if snake[0][0] == 600 or snake[0][1] == 600 or snake[0][0] < 0 or snake[0][1] < 0: # Verifique se a cobra colidiu com os limites
         game_over = True
         break
@@ -78,8 +100,14 @@ while not game_over:
             game_over = True
             break
 
+
+    if score == -1: # se pontuação for igual a -1 é game over
+        game_over = True    
+    
+
     for i in range(len(snake) - 1, 0, -1):
         snake[i] = (snake[i - 1][0], snake[1 - 1][1])
+
 
     if game_over:
         break
@@ -96,15 +124,21 @@ while not game_over:
 
     if snake_direction == LEFT:
         snake[0] = (snake[0][0] - 10,snake[0][1])
+
+
      
     
     screen.fill((0,0,0)) # limpar tela
 
     screen.blit(fruit,fruit_pos) # plotar a fruta
+    screen.blit(poison,poison_pos)# plotar o veneno
+    screen.blit(wall,wall_pos)# plotar parede
+
+
 
     for x in range(0, 600, 10): # Desenhar linhas verticais
         pygame.draw.line(screen, (40, 40, 40), (x, 0), (x, 600))
-    for y in range(0, 600, 10): # Desenhar linhas verticais
+    for y in range(0, 600, 10): # Desenhar linhas horizontais
         pygame.draw.line(screen, (40, 40, 40), (0, y), (600, y))
     
     score_font = font.render('Score: %s' % (score), True, (255, 255, 255))
@@ -116,6 +150,7 @@ while not game_over:
 
     for pos in snake: # irá poltar a cobra na tela para cada posição
         screen.blit(snake_skin,pos) 
+        
 
     pygame.display.update()
 
@@ -132,3 +167,7 @@ while True:
             if event.type == QUIT:
                 pygame.quit()
                 exit()
+
+
+
+# USE O COMANDO python snake_game.py NO TERMINAL PARA RODAR
